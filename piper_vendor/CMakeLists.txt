@@ -26,6 +26,9 @@ ExternalProject_Add(piper_external
   COMMAND sed -i
     "s/212928b394a96e8fd2096616bfd54e17845c48f6/a06074c8fd80f2fd3632164dc01ebf1135395e11/"
     <SOURCE_DIR>/libpiper/CMakeLists.txt
+  COMMAND sed -i
+    "s|add_subdirectory(src/main)|# add_subdirectory(src/main) - removed|"
+    <SOURCE_DIR>/libpiper/CMakeLists.txt
   CMAKE_ARGS
     -DCMAKE_INSTALL_PREFIX=${PIPER_INSTALL_DIR}
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
