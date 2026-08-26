@@ -339,7 +339,7 @@ void PiperNode::execute_callback(
         audio_buffer.insert(audio_buffer.end(), chunk.samples, chunk.samples + chunk.num_samples);
 
         // Add silence between sentences, but never after the final chunk.
-        if (this->sentence_silence_seconds_ > 0.0f && !chunk.is_last) {
+        if (this->sentence_silence_seconds_ > 0.0f && !chunk.is_last && ret != PIPER_DONE) {
           const size_t silence_samples = static_cast<size_t>(this->sentence_silence_seconds_ * static_cast<float>(chunk.sample_rate));
           audio_buffer.insert(audio_buffer.end(), silence_samples, 0.0f);
         }
