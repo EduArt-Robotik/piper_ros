@@ -331,16 +331,21 @@ void PiperNode::execute_callback(
         throw std::runtime_error("Error during synthesis");
       }
 
-      // Do not discard the chunk if piper_synthesize_next() returned PIPER_DONE.
-      // Some piper1-gpl versions still send data in the final chunk.
+      // Do not discard the chunk if piper_synthesize_next() returned
+      // PIPER_DONE. Some piper1-gpl versions still send data in the final
+      // chunk.
       if (chunk.samples != nullptr && chunk.num_samples > 0) {
         sample_rate = chunk.sample_rate;
 
-        audio_buffer.insert(audio_buffer.end(), chunk.samples, chunk.samples + chunk.num_samples);
+        audio_buffer.insert(audio_buffer.end(), chunk.samples,
+                            chunk.samples + chunk.num_samples);
 
         // Add silence between sentences, but never after the final chunk.
-        if (this->sentence_silence_seconds_ > 0.0f && !chunk.is_last && ret != PIPER_DONE) {
-          const size_t silence_samples = static_cast<size_t>(this->sentence_silence_seconds_ * static_cast<float>(chunk.sample_rate));
+        if (this->sentence_silence_seconds_ > 0.0f && !chunk.is_last &&
+            ret != PIPER_DONE) {
+          const size_t silence_samples =
+              static_cast<size_t>(this->sentence_silence_seconds_ *
+                                  static_cast<float>(chunk.sample_rate));
           audio_buffer.insert(audio_buffer.end(), silence_samples, 0.0f);
         }
       }
@@ -352,7 +357,8 @@ void PiperNode::execute_callback(
     }
 
   } catch (const std::exception &e) {
-    RCLCPP_ERROR(this->get_logger(), "Error while generating audio: %s", e.what());
+    RCLCPP_ERROR(this->get_logger(), "Error while generating audio: %s",
+                 e.what());
     goal_handle->abort(result);
     this->run_next_goal();
     return;
@@ -361,7 +367,9 @@ void PiperNode::execute_callback(
   // Publish the synthesized audio only after synthesis has completed.
   std::unique_lock<std::mutex> lock(this->pub_lock_);
 
-  const std::chrono::nanoseconds period(static_cast<int64_t>(1e9 * static_cast<double>(this->chunk_) / static_cast<double>(sample_rate)));
+  const std::chrono::nanoseconds period(
+      static_cast<int64_t>(1e9 * static_cast<double>(this->chunk_) /
+                           static_cast<double>(sample_rate)));
 
   this->pub_rate = std::make_unique<rclcpp::Rate>(period);
 
@@ -369,10 +377,13 @@ void PiperNode::execute_callback(
   for (size_t i = 0; i < audio_buffer.size(); i += this->chunk_) {
 
     const size_t remaining = audio_buffer.size() - i;
-    const size_t data_size = std::min(static_cast<size_t>(this->chunk_), remaining);
-    std::vector<float> data(audio_buffer.begin() + i,audio_buffer.begin() + i + data_size);
+    const size_t data_size =
+        std::min(static_cast<size_t>(this->chunk_), remaining);
+    std::vector<float> data(audio_buffer.begin() + i,
+                            audio_buffer.begin() + i + data_size);
 
-    // AudioStamped chunks are required to have exactly chunk_ samples. Zero-pad only the final message.
+    // AudioStamped chunks are required to have exactly chunk_ samples. Zero-pad
+    // only the final message.
     if (data.size() < static_cast<size_t>(this->chunk_)) {
       data.resize(this->chunk_, 0.0f);
     }
@@ -406,6 +417,7 @@ void PiperNode::execute_callback(
 
   goal_handle->succeed(result);
 
-  // Start the next queued goal ONLY after the current goal has finished publishing its audio.
+  // Start the next queued goal ONLY after the current goal has finished
+  // publishing its audio.
   this->run_next_goal();
 }
